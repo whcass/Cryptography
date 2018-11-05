@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Cryptopals
@@ -8,10 +9,36 @@ namespace Cryptopals
     {
         public static void Main(string[] args)
         {
-            string[] lines = System.IO.File.ReadAllLines(@"4.txt");
-            //string input = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736";
-            //string test = "0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272";
+
+            string input = "Burning 'em, if you ain't quick and nimble\nI go crazy when I hear a cymbal";
+            string test = "0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f";
             //string against = "686974207468652062756c6c277320657965";
+            string key = "ICE";
+            string result = repeatingKeyXorEncode(input, key);
+
+            Test(test,result);
+            Console.WriteLine("Done.");
+        }
+
+        private static string repeatingKeyXorEncode(string input, string key)
+        {
+            byte[] hexInput = HexStringToHex(stringToHex(input));
+            byte[] hexKey = HexStringToHex(stringToHex(key));
+            byte[] result = new byte[hexInput.Length];
+            for (int i = 0; i < hexInput.Length; i++)
+            {
+                byte k = hexKey[i % hexKey.Length];
+                result[i] = (byte)(hexInput[i] ^ k);
+            }
+            string resultString = BitConverter.ToString(result);
+            resultString = resultString.Replace("-", "");
+            return resultString.ToLower();
+        }
+
+        private static void fileSingleByteXorDecode(string fileName)
+        {
+
+            string[] lines = System.IO.File.ReadAllLines(fileName);
             string s = "";
             for (int i = 32; i <= 126; i++)
             {
@@ -22,9 +49,6 @@ namespace Cryptopals
             {
                 singeByteXorDecode(charArray, line);
             }
-
-
-            //Test(test,result);
         }
 
         private static void singeByteXorDecode(char[] charArray, string input)
@@ -99,6 +123,13 @@ namespace Cryptopals
                 resultArray[i] = Convert.ToByte(inputHex.Substring(i * 2, 2), 16);
             }
             return resultArray;
+        }
+
+        private static string stringToHex(string input)
+        {
+            byte[] bytes = Encoding.Default.GetBytes(input);
+            string hexString = BitConverter.ToString(bytes);
+            return hexString.Replace("-", "");
         }
 
         private static void Test(string test, string result)
