@@ -8,24 +8,38 @@ namespace Cryptopals
     {
         public static void Main(string[] args)
         {
-
-            string input = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736";
+            string[] lines = System.IO.File.ReadAllLines(@"4.txt");
+            //string input = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736";
             //string test = "0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272";
             //string against = "686974207468652062756c6c277320657965";
-            char[] charArray = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".ToCharArray();
+            string s = "";
+            for (int i = 32; i <= 126; i++)
+            {
+                s += Convert.ToChar(i);
+            }
+            char[] charArray = s.ToCharArray();
+            foreach (string line in lines)
+            {
+                singeByteXorDecode(charArray, line);
+            }
+
+
+            //Test(test,result);
+        }
+
+        private static void singeByteXorDecode(char[] charArray, string input)
+        {
             foreach (char c in charArray)
             {
                 char[] result = singleByteXor(input, c);
                 int matches = characterAnalysis(result);
                 if (matches > 20)
                 {
-                    Console.WriteLine("Possible match found using - "+c);
+                    Console.WriteLine("Possible match found using - " + c);
                     Console.WriteLine(new string(result));
-                    Console.WriteLine("Maches: "+matches+"\n");
+                    Console.WriteLine("Maches: " + matches + "\n");
                 }
             }
-
-            //Test(test,result);
         }
 
         private static char[] singleByteXor(string input, char c)
