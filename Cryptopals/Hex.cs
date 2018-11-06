@@ -10,6 +10,13 @@ namespace Cryptopals
 			return Convert.ToBase64String(HexStringToHex(input));
 		}
 
+		public static string Base64ToHex(string input)
+		{
+			byte[] hexBytes = Convert.FromBase64String(input);
+			string hex = BitConverter.ToString(hexBytes).Replace("-","").ToLower();
+			return hex;
+		}
+
 		public static byte[] HexStringToHex(string inputHex)
 		{
 			var resultArray = new byte[inputHex.Length / 2];

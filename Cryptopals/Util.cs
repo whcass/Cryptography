@@ -1,4 +1,5 @@
 using System;
+using System.Security.Principal;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -24,7 +25,7 @@ namespace Cryptopals
 		{
 			StringBuilder sb = new StringBuilder();
 
-			foreach (char c in data.ToCharArray())
+			foreach (char c in data)
 			{
 				sb.Append(Convert.ToString(c, 2).PadLeft(8, '0'));
 			}
@@ -46,6 +47,45 @@ namespace Cryptopals
 
 			return distance;
 
+		}
+
+		public static int GetHammingDistance(byte[] a, byte[] b)
+		{
+			int distance = 0;
+			for (int i = 0; i < a.Length;i++)
+			{
+				if (a[i] != b[i])
+				{
+					distance++;
+				}
+			}
+
+			return distance;
+		}
+
+		public static byte[] Slice(byte[] arr, int start, int end)
+		{
+			// Handles negative ends.
+			if (end < 0)
+			{
+				end = arr.Length + end;
+			}
+			int len = end - start;
+
+			// Return new array.
+			byte[] res = new byte[len];
+			for (int i = 0; i < len; i++)
+			{
+				res[i] = arr[i + start];
+			}
+			return res;
+		}
+
+		public static byte[] SubArray(byte[] data, int index, int length)
+		{
+			byte[] result = new byte[length];
+			Array.Copy(data, index, result, 0, length);
+			return result;
 		}
 	}
 }
