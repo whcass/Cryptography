@@ -101,5 +101,15 @@ namespace Cryptopals
 			return s;
 		}
 
+		public static byte[] ASCIIToBytes(string input)
+		{
+			return Encoding.ASCII.GetBytes(input);
+		}
+
+		public static byte[] Base64ToBytes(string input)
+		{
+			return Convert.FromBase64String(input);
+		}
+
 	}
 }

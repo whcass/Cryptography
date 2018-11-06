@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Security.Principal;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -15,12 +16,42 @@ namespace Cryptopals
 
     class Program
     {
-
-
-
-
         public static void Main(string[] args)
         {
+            string input = File.ReadAllText(@"7.txt");
+            byte[] data = Util.Base64ToBytes(input);
+            string result = Aes128EcbDecrypt(data,"YELLOW SUBMARINE");
+            Console.WriteLine(result);
+
+        }
+
+        private static string Aes128EcbDecrypt(byte[] data, string key)
+        {
+
+            var aes = new AesManaged
+            {
+                Key = Util.ASCIIToBytes(key),
+                Mode = CipherMode.ECB
+            };
+
+            string plaintext;
+
+            var decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
+            using (var msDecrypt = new MemoryStream(data))
+            {
+                using (var csDecrypt = new CryptoStream(msDecrypt
+                    , decryptor, CryptoStreamMode.Read))
+                {
+                    using (var srDecrypt = new StreamReader(
+                        csDecrypt))
+                    {
+                        plaintext = srDecrypt.ReadToEnd();
+                    }
+                }
+            }
+
+            return plaintext.Trim('\u0004').Trim();
+
 
         }
 
