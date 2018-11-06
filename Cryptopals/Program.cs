@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -20,53 +21,77 @@ namespace Cryptopals
 
         public static void Main(string[] args)
         {
-            string testString = Xor.repeatingKeyXorEncode("Burning 'em, if you ain't quick and nimble", "ICE");
+            string testString = Xor.repeatingKeyXorEncode("Burning 'em, if you ain't quick and nimble", "ICED");
             string input = File.ReadAllText(@"6.txt");
-            string hexString = Hex.Base64ToHex(input);
-            hexString = testString;
-            byte[] inputBytes = Encoding.Default.GetBytes(Util.StringToBinary(hexString));
-            int[] keysize = Enumerable.Range(2, 41).ToArray();
-            int smallestEditDistance = 100;
-            int probableKeySize = 0;
-            for (int i = 0; i < keysize.Length; i++)
-            {
-                byte[] a = Util.SubArray(inputBytes,0, keysize[i]);
-                byte[] b = Util.SubArray(inputBytes,keysize[i], keysize[i]);
-
-                int editDistance = Util.GetHammingDistance(a,b)/keysize[i];
-                //Console.WriteLine("{0}\n{1}\n{2}\n",a,b,editDistance);
-                if (editDistance < smallestEditDistance)
-                {
-                    smallestEditDistance = editDistance;
-                    probableKeySize = keysize[i];
-                }
-            }
-
-//            int len = inputBytes.Length / probableKeySize;
-//            byte[,] brokenDown = new byte[2,len];
-//            for (int i = 0; i < brokenDown.Length; i++)
-//            {
-//                brokenDown[i,0] = new byte[]{Util.SubArray(inputBytes, i, probableKeySize)};
-//            }
-
-            //Console.WriteLine(probableKeySize);
-            if (probableKeySize != 3)
-            {
-                Console.WriteLine("Nope");
-            }
-            else
-            {
-                Console.WriteLine("wahey");
-            }
-
+            Challenge6(input);
         }
 
+        private static string Challenge6(string input)
+        {
+            string hexString = Hex.Base64ToHex(input);
+            //hexString = testString;
+            byte[] inputBytes = Encoding.Default.GetBytes(Util.StringToBinary(hexString));
 
+            var probableKeySize = ProbableKeySize(hexString);
 
+            inputBytes = Hex.HexStringToHex(hexString);
+            List<byte[]> transposed = new List<byte[]>();
+            for (int i = 0; i < probableKeySize; i++)
+            {
+                List<byte> transposedBlock = new List<byte>();
+                for (int j = i; j <= inputBytes.Length - 1; j += probableKeySize)
+                {
+                    transposedBlock.Add(inputBytes[j]);
+                }
 
+                transposed.Add(transposedBlock.ToArray());
+            }
 
+            string key = "";
+            foreach (byte[] bytes in transposed)
+            {
+                string byteString = BitConverter.ToString(bytes).Replace("-", "").ToLower();
+                key += Xor.singeByteXorDecode(Util.GenerateCharArray().ToCharArray(), byteString);
+            }
 
+            string result = Hex.repeatingKeyXorDecode(hexString, key);
+            //Console.WriteLine(result);
+            return result;
+        }
 
+        private static int ProbableKeySize(string data)
+        {
+            //int[] keysize = Enumerable.Range(2, 41).ToArray();
+            //int smallestEditDistance = 100;
+            //int probableKeySize = 0;
+            var optimalLength = 0;
+            var optimalDistance = double.PositiveInfinity;
+            var sampleSize = 12;
+            for (int prospectiveKeyLength = 1; prospectiveKeyLength < 41; prospectiveKeyLength++)
+            {
+                var sum = 0.0;
+
+                for (int sample = 0; sample < sampleSize; sample++)
+                {
+                    var a = data.Substring(2 * sample * prospectiveKeyLength * 2, prospectiveKeyLength * 2);
+                    var b = data.Substring((2*sample + 1)*prospectiveKeyLength*2, prospectiveKeyLength*2);
+
+                    sum += Util.GetHammingDistance(Hex.HexToBytes(a), Hex.HexToBytes(b));
+                }
+
+                sum /= prospectiveKeyLength * sampleSize;
+
+                if (sum >= optimalDistance)
+                {
+                    continue;
+                }
+
+                optimalDistance = sum;
+                optimalLength = prospectiveKeyLength;
+            }
+
+            return optimalLength;
+        }
 
 
         private static void Test(string test, string result)

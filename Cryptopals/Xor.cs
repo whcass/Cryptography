@@ -23,6 +23,7 @@ namespace Cryptopals
 		public static string repeatingKeyXorEncode(string input, string key)
         {
             byte[] hexInput = Hex.HexStringToHex(Hex.stringToHex(input));
+
             byte[] hexKey = Hex.HexStringToHex(Hex.stringToHex(key));
             byte[] result = new byte[hexInput.Length];
             for (int i = 0; i < hexInput.Length; i++)
@@ -39,32 +40,35 @@ namespace Cryptopals
         {
 
             string[] lines = System.IO.File.ReadAllLines(fileName);
-            string s = "";
-            for (int i = 32; i <= 126; i++)
-            {
-                s += Convert.ToChar(i);
-            }
-            char[] charArray = s.ToCharArray();
+            var s = Util.GenerateCharArray();
+	        char[] charArray = s.ToCharArray();
             foreach (string line in lines)
             {
                 singeByteXorDecode(charArray, line);
             }
         }
 
-		public static void singeByteXorDecode(char[] charArray, string input)
-        {
+
+		public static char singeByteXorDecode(char[] charArray, string input)
+		{
+			int bestMach = 0;
+			char key = 'E';
             foreach (char c in charArray)
             {
                 char[] result = singleByteXor(input, c);
                 int matches = Util.characterAnalysis(result);
-                if (matches > 20)
+                if (matches > bestMach)
                 {
-                    Console.WriteLine("Possible match found using - " + c);
-                    Console.WriteLine(new string(result));
-                    Console.WriteLine("Maches: " + matches + "\n");
+	                bestMach = matches;
+	                key = c;
+	                //Console.WriteLine("Possible match found using - " + c);
+	                //Console.WriteLine(new string(result));
+	                //Console.WriteLine("Maches: " + matches + "\n");
                 }
             }
-        }
+
+			return key;
+		}
 
 		public static char[] singleByteXor(string input, char c)
         {

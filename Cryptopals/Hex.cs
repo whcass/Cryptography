@@ -49,6 +49,20 @@ namespace Cryptopals
             return resultString.ToLower();
         }
 
+		public static string repeatingKeyXorDecode(string input, string key)
+		{
+			byte[] hexInput = HexStringToHex(input);
+			char[] charKey = key.ToCharArray();
+			char[] result = new char[hexInput.Length];
+			for (int i = 0; i < hexInput.Length; i++)
+			{
+				char k = charKey[i % charKey.Length];
+				result[i] = Convert.ToChar(hexInput[i] ^ k);
+			}
+
+			return new string(result);
+		}
+
 		public static void fileSingleByteXorDecode(string fileName)
         {
 
@@ -61,11 +75,11 @@ namespace Cryptopals
             char[] charArray = s.ToCharArray();
             foreach (string line in lines)
             {
-                singeByteXorDecode(charArray, line);
+                SingleByteXorDecode(charArray, line);
             }
         }
 
-		public static void singeByteXorDecode(char[] charArray, string input)
+		public static void SingleByteXorDecode(char[] charArray, string input)
         {
             foreach (char c in charArray)
             {
@@ -98,6 +112,18 @@ namespace Cryptopals
 		public static string ConvertHexToString(byte[] input)
 		{
 			return BitConverter.ToString(input).Replace("-", "").ToLower();
+		}
+
+		public static byte[] HexToBytes(string input)
+		{
+			var arr = new string[input.Length/2];
+
+			for (var i = 0; i < input.Length; i += 2)
+			{
+				arr[i/2] = input.Substring(i, 2);
+			}
+
+			return Array.ConvertAll(arr, s => Convert.ToByte(s, 16));
 		}
 	}
 }

@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Security.Principal;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -87,5 +89,17 @@ namespace Cryptopals
 			Array.Copy(data, index, result, 0, length);
 			return result;
 		}
+
+		public static string GenerateCharArray()
+		{
+			string s = "";
+			for (int i = 32; i <= 126; i++)
+			{
+				s += Convert.ToChar(i);
+			}
+
+			return s;
+		}
+
 	}
 }
