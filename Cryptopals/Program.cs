@@ -21,9 +21,7 @@ namespace Cryptopals
 
         public static void Main(string[] args)
         {
-            string testString = Xor.repeatingKeyXorEncode("Burning 'em, if you ain't quick and nimble", "ICED");
-            string input = File.ReadAllText(@"6.txt");
-            Challenge6(input);
+
         }
 
         private static string Challenge6(string input)
