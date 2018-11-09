@@ -28,6 +28,7 @@ This code is going to turn out to be surprisingly useful later on. Breaking repe
 use strict;
 use warnings;
 use MIME::Base64;
+use List::Util qw/ sum /;
 
 my $file = "resources/6.txt";
 my $input;
@@ -37,26 +38,40 @@ my $input;
     $input = <$fh>;
     $input = decode_base64($input);
 }
-
-$input = unpack "H*", $input;
-
-print GetHammingDistance("this is a test", "wokka wokka !!!");
-
-sub GetHammingDistance{
-    my $input1 = $_[0];
-    my $input1Bits = unpack "B*",$input1;
-    my $input2 = $_[1];
-    my $input2Bits = unpack "B*",$input2;
-    my $count = 0;
-    print "$input1Bits\n$input2Bits\n";
-    foreach my $i (0..length($input1Bits)-1){
-        my $aBit = substr($input1Bits,$i,1);
-        my $bBit = substr($input2Bits,$i,1);
-        
-        if($aBit != $bBit){
-            $count++;
+# Get the keysize
+my $keysizes;
+foreach my $keysize (2..40){
+    my @dists;
+    foreach my $x (1..10){
+        foreach my $y (0..10){
+            last if $x==$y;
+            my $a = substr($input,$x*$keysize,$keysize);
+            my $b = substr($input,$y*$keysize,$keysize);
+            push @dists, getHammingDistance($a,$b)/$keysize;
         }
+    }
+    my $averageDistance = sum(@dists)/scalar @dists;
+    #print "[*] Dist: $averageDistance\n[*] Keysize: $keysize\n";
+    $keysizes->{$keysize} = $averageDistance;
+}
+
+my @sizes = sort { $keysizes->{$a} <=> $keysizes->{$b} } keys %$keysizes;
+my $keysize = $sizes[0];
+print "[*] keysize: $keysize\n";
+
+#my $template = "a$keySize" x (length($input)/$keysize);
+#my @chunks = unpack $template, $input;
+
+sub getHammingDistance { 
+    my ($a, $b) = @_;
+    my $aBits = unpack "B*",$a;
+    my $bBits = unpack "B*",$b;
+    my $count = 0;
+    foreach my $i (0..length($aBits)-1){
+        my $aBit = substr($aBits,$i,1);
+        my $bBit = substr($bBits,$i,1);
+        
+        $count++ if $aBit != $bBit;
     }
     return $count;
 }
-
