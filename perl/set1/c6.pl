@@ -134,8 +134,6 @@ foreach my $line (split /\n/, $prettyPrint){
     print "[*] $line\n";
 }
 
-
-
 sub getHammingDistance { 
     my ($a, $b) = @_;
     my $aBits = unpack "B*",$a;
