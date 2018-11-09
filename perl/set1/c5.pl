@@ -20,16 +20,22 @@ use warnings;
 
 my $input = "Burning 'em, if you ain't quick and nimble\nI go crazy when I hear a cymbal";
 my $key = "ICE";
-my $hexKey = pack "H*", $key;
-my $hex = pack "H*", $input;
-my $result = "";
 
-foreach my $i (0..length($hex)){
-    my $keyBit = substr($hexKey,$i% length($hexKey));
-    my $hexBit = substr($hex,$i);
-    $result .=  $hexBit ^ $keyBit;
+my @inputSplit = split //, $input;
+my @keySplit = split //, $key;
+
+my @hexKey = map {unpack "H*", $_} @keySplit;
+my @hex = map {unpack "H*", $_} @inputSplit;
+my @result = [];
+
+foreach my $i (0..scalar(@hex)-1){
+    my $hexBit = pack "H*",$hex[$i];
+    my $keyBit = pack "H*", @hexKey[$i%scalar(@hexKey)];
+    push(@result, $hexBit^$keyBit );
 }
-$result = unpack "H*", $result;
-print "[*] $input\n";
-print "[*] $hex\n";
-print "[*] $result\n";
+
+@result = map{unpack "H*", $_} @result;
+# Remove that weird item at the start of the array, going to chalk that up to perl weirdness
+splice @result, 0, 1;
+my $prettyPrint = join("",@result);
+print "[*] $prettyPrint\n";
