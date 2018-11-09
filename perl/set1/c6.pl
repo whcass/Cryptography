@@ -25,4 +25,38 @@ For each block, the single-byte XOR key that produces the best looking histogram
 This code is going to turn out to be surprisingly useful later on. Breaking repeating-key XOR ("Vigenere") statistically is obviously an academic exercise, a "Crypto 101" thing. But more people "know how" to break it than can actually break it, and a similar technique breaks something much more important.
 
 =cut
+use strict;
+use warnings;
+use MIME::Base64;
+
+my $file = "resources/6.txt";
+my $input;
+{
+    local $/;
+    open my $fh, '<', $file or die "can't open $file: $!";
+    $input = <$fh>;
+    $input = decode_base64($input);
+}
+
+$input = unpack "H*", $input;
+
+print GetHammingDistance("this is a test", "wokka wokka !!!");
+
+sub GetHammingDistance{
+    my $input1 = $_[0];
+    my $input1Bits = unpack "B*",$input1;
+    my $input2 = $_[1];
+    my $input2Bits = unpack "B*",$input2;
+    my $count = 0;
+    print "$input1Bits\n$input2Bits\n";
+    foreach my $i (0..length($input1Bits)-1){
+        my $aBit = substr($input1Bits,$i,1);
+        my $bBit = substr($input2Bits,$i,1);
+        
+        if($aBit != $bBit){
+            $count++;
+        }
+    }
+    return $count;
+}
 
