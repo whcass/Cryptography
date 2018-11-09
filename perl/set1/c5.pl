@@ -19,5 +19,17 @@ use strict;
 use warnings;
 
 my $input = "Burning 'em, if you ain't quick and nimble\nI go crazy when I hear a cymbal";
+my $key = "ICE";
+my $hexKey = pack "H*", $key;
 my $hex = pack "H*", $input;
+my $result = "";
 
+foreach my $i (0..length($hex)){
+    my $keyBit = substr($hexKey,$i% length($hexKey));
+    my $hexBit = substr($hex,$i);
+    $result .=  $hexBit ^ $keyBit;
+}
+$result = unpack "H*", $result;
+print "[*] $input\n";
+print "[*] $hex\n";
+print "[*] $result\n";
