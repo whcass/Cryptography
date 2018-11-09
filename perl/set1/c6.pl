@@ -38,7 +38,9 @@ my $input;
     $input = <$fh>;
     $input = decode_base64($input);
 }
+# ==============================================================
 # Get the keysize
+# ==============================================================
 my $keysizes;
 foreach my $keysize (2..40){
     my @dists;
@@ -51,16 +53,88 @@ foreach my $keysize (2..40){
         }
     }
     my $averageDistance = sum(@dists)/scalar @dists;
-    #print "[*] Dist: $averageDistance\n[*] Keysize: $keysize\n";
     $keysizes->{$keysize} = $averageDistance;
 }
 
 my @sizes = sort { $keysizes->{$a} <=> $keysizes->{$b} } keys %$keysizes;
 my $keysize = $sizes[0];
+
 print "[*] keysize: $keysize\n";
 
-#my $template = "a$keySize" x (length($input)/$keysize);
-#my @chunks = unpack $template, $input;
+# ==============================================================
+# Split the cipher text into chunks
+# ==============================================================
+
+my $template = "a$keysize" x (length($input)/$keysize);
+my @chunks = unpack $template, $input;
+
+my @blocks;
+for my $byte (0..($keysize-1)) {
+    push @blocks, join '', map { substr $_, $byte, 1 } @chunks;
+}
+
+# ==============================================================
+# Get the key
+# ==============================================================
+my $decrypts;
+
+my @chars = pack "c*", (32..126);
+foreach my $block (@blocks){
+    #my $hex = pack "H*", $block;    
+    my $hex = $block;
+    #print $chars;
+    my $bestMatch = 0;
+    my $bestResult = "";
+    my $key = "";
+    foreach my $char (split //, $chars[0]){
+        my $result = "";
+
+        $result .= $char ^ $_ foreach (split//, $hex);
+        $result = unpack "A*", $result;
+        my $matches = () = $result =~ /[ETAOIN SHRDLU]/mgi;
+        if($matches>$bestMatch){
+            $bestMatch = $matches;
+            $key = $char;
+            $bestResult = $result;
+        }
+    }
+    $decrypts .= $key;
+}
+
+print "[*] key - $decrypts\n";
+
+# ==============================================================
+# Decrypt this bad boy
+# ==============================================================
+
+my $key = $decrypts;
+
+my @inputSplit = split //, $input;
+my @keySplit = split //, $key;
+
+my @hexKey = map {unpack "H*", $_} @keySplit;
+my @hex = map {unpack "H*", $_} @inputSplit;
+my @result = [];
+
+foreach my $i (0..scalar(@hex)-1){
+    my $hexBit = pack "H*",$hex[$i];
+    my $keyBit = pack "H*", @hexKey[$i%scalar(@hexKey)];
+    push(@result, $hexBit^$keyBit );
+}
+
+# Remove that weird item at the start of the array, going to chalk that up to perl weirdness
+
+splice @result, 0, 1;
+my $prettyPrint = join("",@result);
+#print join ", ", @result;
+#print $prettyPrint;
+print "[*] STARTING DUMP \n";
+print "[*] =================================================================== \n";
+foreach my $line (split /\n/, $prettyPrint){
+    print "[*] $line\n";
+}
+
+
 
 sub getHammingDistance { 
     my ($a, $b) = @_;
