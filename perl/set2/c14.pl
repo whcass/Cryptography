@@ -72,7 +72,7 @@ for(my $j = 1; $j<=$numOfBlocks;$j++){
             if($result eq $injectResult){
 ;
                 $byte = substr $inject, ($blockSize*$j)-1, 1;
-
+                last if $byte eq "\cA";
                 $lastBlock.=$byte;
 
                 chop $prefix;
@@ -110,7 +110,7 @@ sub pad_plaintext {
     my ($plainText) = @_;
     my $minimum = 5;
     my $maximum = 10;
-    my $beforePad = pad("",rand_between(5,10));
+    my $beforePad = generate_padding();
     #my $beforePad = "";
     #my $afterPad = pad("",rand_between(5,10));
 
@@ -118,6 +118,12 @@ sub pad_plaintext {
 
     return $plainText;
 
+}
+
+sub generate_padding {
+    my @set = ('0'..'9','a'..'z','A'..'Z');
+    my $padding = join '' => map $set[rand @set],1..rand_between(2,16);
+    return $padding;
 }
 
 sub generate_aes_key {
