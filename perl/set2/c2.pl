@@ -15,7 +15,7 @@ use strict;
 use warnings;
 use MIME::Base64;
 use Crypt::OpenSSL::AES;
-
+use Carp;
 
 my $file = "resources/2.txt";
 my $cipherText;
@@ -27,10 +27,14 @@ my $cipherText;
 }
 my $key = "YELLOW SUBMARINE";
 my $decrypt = Crypt::OpenSSL::AES->new($key);
+my $encrypt = Crypt::OpenSSL::AES->new($key);
 my $iv = "\x00" x 16;
-#$iv = pack "H*", $iv;
+
 my $cbc_decrypt = cbc_decrypt($cipherText,$iv,$decrypt);
-print $cbc_decrypt;
+print "$cbc_decrypt\n";
+my $cbc_encrypt = cbc_encrypt($cbc_decrypt,$iv,$encrypt);
+$cbc_encrypt = encode_base64($cbc_encrypt);
+print "$cbc_encrypt\n";
 
 
 sub cbc_decrypt {
@@ -44,9 +48,41 @@ sub cbc_decrypt {
         $result .= "$dec" ^ "$state";
         $state = $block;
     }
+    $result = unpad($result);
     return $result;
 }
 
 sub cbc_encrypt {
     my ($plainText,$iv,$encrypt) = @_;
+    $plainText = pad($plainText,16);
+    my $result;
+    my $state = $iv;
+    for(my $offset = 0; $offset<length($plainText);$offset+=16){
+        my $block = substr($plainText,$offset,16);
+        $block = "$block" ^ "$state";
+        $state = $encrypt->encrypt($block);
+        $result .= $state;
+    }
+    return $result;
+}
+
+sub unpad {
+    my ($data) = @_;
+    my $count = ord(substr($data, -1, 1));
+    if ($count == 0) {
+        croak "invalid PKCS#7 padding";
+    }
+    for (1..$count) {
+        unless (ord(chop $data) eq $count) {
+            croak "invalid PKCS#7 padding";
+        }
+    }
+    return $data;
+}
+
+sub pad {
+    my ($data, $blocklen) = @_;
+    my $mod = $blocklen - (length($data) % $blocklen);
+    $mod ||= $blocklen;
+    return $data . (chr($mod) x $mod);
 }
