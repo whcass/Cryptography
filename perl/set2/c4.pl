@@ -41,8 +41,7 @@ my $diff = 0;
 my $lastLength = 0;
 for my $i (1..40){
     my $bitInsert = "A" x $i;
-    my $inputText = $bitInsert;
-    my $cipher = encryption_oracle($inputText);
+    my $cipher = encryption_oracle($bitInsert);
     my $cipherLength = length($cipher);
     if($lastLength > $cipherLength){
         $blockSize = $lastLength-$cipherLength;
