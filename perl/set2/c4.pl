@@ -43,17 +43,17 @@ for my $i (1..40){
     my $bitInsert = "A" x $i;
     my $cipher = encryption_oracle($bitInsert);
     my $cipherLength = length($cipher);
-    if($lastLength > $cipherLength){
-        $blockSize = $lastLength-$cipherLength;
-        last;
-    }else{
+    if($lastLength == 0){
         $lastLength = $cipherLength;
+    }elsif($cipherLength>$lastLength){
+        $blockSize = $cipherLength - $lastLength;
+        last;
     }
 }
 
 print "[*] Block size: $blockSize\n";
-my $inject = 'x' x 50;
-my $cipher = encryption_oracle($inject);
+my $injectForMode = 'x' x 50;
+my $cipher = encryption_oracle($injectForMode);
 my $blocks;
 for(my $offset = 0; $offset < length($cipher); $offset += 16){
     my $block = substr $cipher, $offset, 16;
@@ -63,39 +63,46 @@ for(my $offset = 0; $offset < length($cipher); $offset += 16){
     }
 }
 
-my @charArray = map(chr,(32..126));
+my $numOfBlocks = length($cipher)/$blockSize;
+
+my @charArray = map(chr,(0..255));
+my $bruteForced = "";
 #my @charArray = ("a".."z");
-my $firstBlock;
-my $bytes = "";
-for(my $i = 1; $i<=$blockSize;$i++){
-    my $injectPad = 'A' x int($blockSize-$i);
-    $injectPad .= $bytes;
-    
-    my $injectResult = substr encryption_oracle($injectPad), 0, $blockSize;
-    
-    my @injectArray;
-    my $byte;
-    foreach my $char (@charArray){
-        push @injectArray, $injectPad.$char;
-    }
-    
-    foreach my $inject (@injectArray){
-        my $result = substr encryption_oracle($inject), 0, $blockSize;
-        #print "[i] $inject\n";
-        #print "[r] $result\n";
-        if($result eq $injectResult){
-            #print "[*] found: $inject\n";
-            $byte = substr $inject, $blockSize-1, 1;
-            $bytes.=$byte;
-            last;
+for(my $j = 0; $j<=2;$j++){
+    my $paddingLength =(int($blockSize-1));
+    my $prefix = 'A' x $paddingLength;
+    my $lastBlock = $bruteForced;
+    for(my $i = 0; $i<$blockSize;$i++){
+        my $trying = $prefix.$lastBlock;
+        print "[*] Padding: $trying\n";
+        my $injectResult = substr encryption_oracle($prefix), 0, $blockSize;
+        
+        my @injectArray;
+        my $byte;
+        foreach my $char (@charArray){
+            push @injectArray, $prefix.$lastBlock.$char;
         }
+        
+        foreach my $inject (@injectArray){
+            my $result = substr encryption_oracle($inject), 0, $blockSize;
+            #print "[i] $inject\n";
+            #print "[r] $result\n";
+            if($result eq $injectResult){
+                #print "[*] found: $inject\n";
+                $byte = substr $inject, $blockSize-1, 1;
+                $lastBlock.=$byte;
+                #substr $lastBlock, 0, 1, "";
+                chop $prefix;
+                last;
+            }
+        }
+        
     }
-    
+
+    $bruteForced.=$lastBlock;
 }
 
-
-
-print "[*] $bytes";
+print "[*] $bruteForced";
 
 sub encryption_oracle {
     my ($plainText) = @_;
@@ -103,10 +110,11 @@ sub encryption_oracle {
 # aGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBq
 # dXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUg
 # YnkK";
+    
     my $appendCode = "hello this is a test wokka wokka wokka wokka wokka wokka!!!";
     #$appendCode = decode_base64($appendCode);
     $plainText.=$appendCode;
-    $plainText = pad_plaintext($plainText);
+    #$plainText = pad_plaintext($plainText);
     my $encrypt = Crypt::OpenSSL::AES->new($key);
     my $cipher;
     $cipher = ecb_encrypt($plainText,$encrypt);
@@ -119,8 +127,8 @@ sub pad_plaintext {
     my ($plainText) = @_;
     my $minimum = 5;
     my $maximum = 10;
-    #my $beforePad = pad("",rand_between(5,10));
-    my $beforePad = "";
+    my $beforePad = pad("",rand_between(5,10));
+    #my $beforePad = "";
     my $afterPad = pad("",rand_between(5,10));
 
     $plainText = $beforePad .= $plainText.= $afterPad;
