@@ -50,6 +50,10 @@ for my $i (1..40){
         last;
     }
 }
+# my $foo = substr encryption_oracle("AAAAAAAAAAAAAAAhello this is a "), 0, $blockSize;
+# my $bar = substr encryption_oracle("AAAAAAAAAAAAAAAhello this is a t"), 0, $blockSize;
+# print "[foo] $foo\n";
+# print "[bar] $bar\n";
 
 print "[*] Block size: $blockSize\n";
 my $injectForMode = 'x' x 50;
@@ -63,19 +67,19 @@ for(my $offset = 0; $offset < length($cipher); $offset += 16){
     }
 }
 
-my $numOfBlocks = length($cipher)/$blockSize;
-
+my $numOfBlocks = length(encryption_oracle())/$blockSize;
+print "[*] Num of Blocks: $numOfBlocks\n";
 my @charArray = map(chr,(0..255));
 my $bruteForced = "";
 #my @charArray = ("a".."z");
-for(my $j = 0; $j<=2;$j++){
+for(my $j = 1; $j<=$numOfBlocks;$j++){
     my $paddingLength =(int($blockSize-1));
     my $prefix = 'A' x $paddingLength;
     my $lastBlock = $bruteForced;
     for(my $i = 0; $i<$blockSize;$i++){
         my $trying = $prefix.$lastBlock;
-        print "[*] Padding: $trying\n";
-        my $injectResult = substr encryption_oracle($prefix), 0, $blockSize;
+        #print "[*] Padding: $trying\n";
+        my $injectResult = substr encryption_oracle($prefix), 0, $blockSize*$j;
         
         my @injectArray;
         my $byte;
@@ -84,13 +88,15 @@ for(my $j = 0; $j<=2;$j++){
         }
         
         foreach my $inject (@injectArray){
-            my $result = substr encryption_oracle($inject), 0, $blockSize;
+            my $result = substr encryption_oracle($inject), 0, $blockSize*$j;
             #print "[i] $inject\n";
             #print "[r] $result\n";
             if($result eq $injectResult){
                 #print "[*] found: $inject\n";
-                $byte = substr $inject, $blockSize-1, 1;
+                $byte = substr $inject, ($blockSize*$j)-1, 1;
+                last if $byte eq "\cA";
                 $lastBlock.=$byte;
+                
                 #substr $lastBlock, 0, 1, "";
                 chop $prefix;
                 last;
@@ -99,20 +105,20 @@ for(my $j = 0; $j<=2;$j++){
         
     }
 
-    $bruteForced.=$lastBlock;
+    $bruteForced=$lastBlock;
 }
 
 print "[*] $bruteForced";
 
 sub encryption_oracle {
     my ($plainText) = @_;
-#     my $appendCode = "Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkg
-# aGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBq
-# dXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUg
-# YnkK";
+    my $appendCode = "Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkg
+aGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBq
+dXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUg
+YnkK";
     
-    my $appendCode = "hello this is a test wokka wokka wokka wokka wokka wokka!!!";
-    #$appendCode = decode_base64($appendCode);
+    #my $appendCode = "hello this is a test wokka wokka wokka wokka wokka wokka!!!";
+    $appendCode = decode_base64($appendCode);
     $plainText.=$appendCode;
     #$plainText = pad_plaintext($plainText);
     my $encrypt = Crypt::OpenSSL::AES->new($key);
