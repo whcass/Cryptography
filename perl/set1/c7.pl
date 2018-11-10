@@ -16,7 +16,6 @@ use warnings;
 use Crypt::Mode::ECB;
 use MIME::Base64;
 
-
 my $m = Crypt::Mode::ECB->new('AES');
 my $key = "YELLOW SUBMARINE";
 my $file = "resources/7.txt";
