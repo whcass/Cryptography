@@ -38,8 +38,14 @@ print "[*] Block size: $blockSize\n";
 my $injectForMode = 'x' x 50;
 my $cipher = encryption_oracle($injectForMode);
 my $blocks;
-for(my $offset = 0; $offset < length($cipher); $offset += 16){
-    my $block = substr $cipher, $offset, 16;
+my $paddingBypassLength = 0;
+for(my $offset = 0; $offset < length($cipher); $offset += $blockSize){
+    my $block = substr $cipher, $offset, $blockSize;
+    my $nextBlock = substr $cipher, $offset*2, $blockSize;
+    if($block eq $nextBlock){
+        print "[*] Padding Length - $offset\n";
+        $paddingBypassLength = $offset;
+    }
     if($blocks->{$block}++){
         print "[*] Using ECB Mode.\n";
         last;
@@ -50,6 +56,12 @@ my $numOfBlocks = length(encryption_oracle())/$blockSize;
 print "[*] Num of Blocks: $numOfBlocks\n";
 my @charArray = map(chr,(0..255));
 my $bruteForced = "";
+
+my $paddingTest = "A" x 32;
+my $firstThreeBlocks = encryption_oracle($paddingTest);
+$firstThreeBlocks = substr $firstThreeBlocks, 0, $blockSize*4;
+print "[*] $firstThreeBlocks\n";
+my $paddingbypass = "A" x 0;
 
 for(my $j = 1; $j<=$numOfBlocks;$j++){
     my $paddingLength =(int($blockSize-1));
@@ -122,7 +134,7 @@ sub pad_plaintext {
 
 sub generate_padding {
     my @set = ('0'..'9','a'..'z','A'..'Z');
-    my $padding = join '' => map $set[rand @set],1..rand_between(2,16);
+    my $padding = join '' => map $set[rand @set],1..rand_between(1,20);
     return $padding;
 }
 
